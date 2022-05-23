@@ -4,8 +4,10 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::*; // TODO: Later import only the necessary parts.
 
+// TODO: Return Result instead of Vec<Post> directly.
+
 #[proc_macro_attribute]
-pub fn auto_load(args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn loader(args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
     let name = &input.ident;
 
@@ -20,44 +22,44 @@ pub fn auto_load(args: TokenStream, input: TokenStream) -> TokenStream {
     let connection_type = &args;
 
     quote! {
-            #input
+        #input
 
-            impl AutoLoad<#connection_type, Vec<#name>> for #name {
-                fn load_all(connection: &#connection_type) -> Vec<#name>  {
-                    use crate::schema::#name_lower::dsl::*;
-                    use diesel::prelude::*;
+        impl Loader<#connection_type, Vec<#name>> for #name {
+            fn load_all(connection: &#connection_type) -> Vec<#name>  {
+                use crate::schema::#name_lower::dsl::*;
+                use diesel::prelude::*;
 
-                    let results = #name_lower
-                        .load::<#name>(connection)
-                        .expect("Error loading #name_ident");
+                let results = #name_lower
+                    .load::<#name>(connection)
+                    .expect("Error loading #name_ident");
 
-                    results
-                }
-
-                fn load(connection: &#connection_type, limit: i64) -> Vec<#name> {
-                    use crate::schema::#name_lower::dsl::*;
-                    use diesel::prelude::*;
-
-                    let results = #name_lower
-                        .limit(limit)
-                        .load::<#name>(connection)
-                        .expect("Error loading #name_ident");
-
-                    results
-                }
-
-                fn find_by_id(connection: &#connection_type, id_: i32) -> Vec<#name> {
-                    use crate::schema::#name_lower::dsl::*;
-                    use diesel::prelude::*;
-
-                    let results = #name_lower
-                        .find(id_)
-                        .load::<#name>(connection)
-                        .expect("Error loading #name_ident");
-
-                    results
-                }
+                results
             }
+
+            fn load(connection: &#connection_type, limit: i64) -> Vec<#name> {
+                use crate::schema::#name_lower::dsl::*;
+                use diesel::prelude::*;
+
+                let results = #name_lower
+                    .limit(limit)
+                    .load::<#name>(connection)
+                    .expect("Error loading #name_ident");
+
+                results
+            }
+
+            fn find_by_id(connection: &#connection_type, id_: i32) -> Vec<#name> {
+                use crate::schema::#name_lower::dsl::*;
+                use diesel::prelude::*;
+
+                let results = #name_lower
+                    .find(id_)
+                    .load::<#name>(connection)
+                    .expect("Error loading #name_ident");
+
+                results
+            }
+        }
 
     }
     .into()
