@@ -45,6 +45,18 @@ pub fn auto_load(args: TokenStream, input: TokenStream) -> TokenStream {
 
                     results
                 }
+
+                fn find_by_id(connection: &#connection_type, id_: i32) -> Vec<#name> {
+                    use crate::schema::#name_lower::dsl::*;
+                    use diesel::prelude::*;
+
+                    let results = #name_lower
+                        .find(id_)
+                        .load::<#name>(connection)
+                        .expect("Error loading #name_ident");
+
+                    results
+                }
             }
 
     }
