@@ -21,11 +21,23 @@ pub fn auto_load(args: TokenStream, input: TokenStream) -> TokenStream {
             #input
 
             impl #name {
-                pub fn load(connection: &#args) -> Vec<#name>  {
+                pub fn load_all(connection: &#args) -> Vec<#name>  {
                     use crate::schema::#name_lower::dsl::*;
                     use diesel::prelude::*;
 
                     let results = #name_lower
+                        .load::<#name>(connection)
+                        .expect("Error loading #name_ident");
+
+                    results
+                }
+
+                pub fn load(connection: &#args, limit: i64) -> Vec<#name> {
+                    use crate::schema::#name_lower::dsl::*;
+                    use diesel::prelude::*;
+
+                    let results = #name_lower
+                        .limit(limit)
                         .load::<#name>(connection)
                         .expect("Error loading #name_ident");
 
