@@ -64,3 +64,48 @@ pub fn loader(args: TokenStream, input: TokenStream) -> TokenStream {
     }
     .into()
 }
+
+#[proc_macro_attribute]
+pub fn deleter(args: TokenStream, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as ItemStruct);
+    let name = &input.ident;
+
+    let name_lower = name.to_string().to_lowercase();
+
+    let name_lower = format!("{}s", name_lower);
+
+    let name_lower = Ident::new(&name_lower, name.span());
+
+    let args = parse_macro_input!(args as Ident);
+
+    let connection_type = &args;
+
+    quote! (
+        #input
+
+        impl Deleter<#connection_type, usize> for #name {
+            fn delete_all(connection: &#connection_type) -> usize {
+                use crate::schema::#name_lower::dsl::*;
+                use diesel::prelude::*;
+
+                let result: usize = diesel::delete(#name_lower.filter(id.gt(0)))
+                    .execute(connection)
+                    .unwrap();
+
+                result
+            }
+
+            fn delete_by_id(connection: &#connection_type, id_: i32) -> usize {
+                use crate::schema::#name_lower::dsl::*;
+                use diesel::prelude::*;
+
+                let result: usize = diesel::delete(#name_lower.filter(id.eq(id_)))
+                    .execute(connection)
+                    .unwrap();
+
+                result
+            }
+        }
+    )
+    .into()
+}
