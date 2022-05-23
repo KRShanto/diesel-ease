@@ -17,11 +17,13 @@ pub fn auto_load(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let args = parse_macro_input!(args as Ident);
 
+    let connection_type = &args;
+
     quote! {
             #input
 
-            impl #name {
-                pub fn load_all(connection: &#args) -> Vec<#name>  {
+            impl AutoLoad<#connection_type, Vec<#name>> for #name {
+                fn load_all(connection: &#connection_type) -> Vec<#name>  {
                     use crate::schema::#name_lower::dsl::*;
                     use diesel::prelude::*;
 
@@ -32,7 +34,7 @@ pub fn auto_load(args: TokenStream, input: TokenStream) -> TokenStream {
                     results
                 }
 
-                pub fn load(connection: &#args, limit: i64) -> Vec<#name> {
+                fn load(connection: &#connection_type, limit: i64) -> Vec<#name> {
                     use crate::schema::#name_lower::dsl::*;
                     use diesel::prelude::*;
 
