@@ -1,4 +1,27 @@
-// #![allow(unused, dead_code)]
+/* Some conventions for this macro:
+
+    * Your  schema must be the name of your model/struct. It must be in lowercase. and there must be `s` at the end.
+       For example:
+          Your struct:
+            User
+          Your schema:
+            users
+
+    * Your model must be in crate::models; and your schema must be in crate::schema;
+       For example:
+          Your struct:
+            crate::models::User
+          Your schema:
+            crate::schema::users
+
+    * There must be a struct `New{Model}`for the model for inserting values
+         For example:
+             Your struct:
+                User, Post
+             This struct must be availabe:
+                NewUser, NewPost
+*/
+
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
@@ -215,16 +238,22 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_3_get]                        
                     #[doc = ""] 
                     // get functions                           
-                    pub fn #fn_names_get(connection: &#connection_type, #params_for_get: #param_types_for_get) -> Vec<#fn_return_types> {
+                    pub fn #fn_names_get(connection: &#connection_type, #params_for_get: #param_types_for_get) -> diesel::result::QueryResult<Vec<#fn_return_types>> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
-                        let results: Vec<#struct_name> = #struct_module_name
+                        let results = #struct_module_name
                             .filter(#param_names_for_get.eq(#params_for_get))
-                            .load::<#struct_name>(connection)
-                            .expect("Error while loading data"); // TODO: temporary message. Return Result<> instead.
+                            .load::<#struct_name>(connection);
 
-                        let results: Vec<#fn_return_types> = results.iter().map(|x| x.#fields.clone()).collect();
+                        let results = match results {
+                            Ok(vec_of_model) => {
+                                let results = vec_of_model.iter().map(|model| model.#fields.clone()).collect();
+                                
+                                Ok(results)
+                            }
+                            Err(error) => Err(error)
+                        };
 
                         results
                     }
@@ -236,14 +265,13 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_3_get2]
                     #[doc = ""]
                     // get2 functions                
-                    pub fn #fn_names_get2(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> Vec<#struct_name> {
+                    pub fn #fn_names_get2(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> diesel::result::QueryResult<Vec<#struct_name>> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
-                        let results: Vec<#struct_name> = #struct_module_name
+                        let results = #struct_module_name
                             .filter(#params_names_for_delete_get2.eq(#params_for_delete_get2))
-                            .load::<#struct_name>(connection)
-                            .expect("Error while loading data"); // TODO: temporary message. Return Result<> instead.
+                            .load::<#struct_name>(connection);
 
                         results
                     }
@@ -253,27 +281,25 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             // Update functions
             impl #struct_name {
                 #(
-                    pub fn #fn_names_update(connection: &#connection_type, #params_for_get: #param_types_for_get, #new_fields_params: #new_fields_types) -> #struct_name {
+                    pub fn #fn_names_update(connection: &#connection_type, #params_for_get: #param_types_for_get, #new_fields_params: #new_fields_types) -> diesel::result::QueryResult<#struct_name> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
                         diesel::update(#struct_module_name.filter(#param_names_for_get.eq(#params_for_get)))
                             .set(#new_fields_names.eq(#new_fields_params))
                             .get_result::<#struct_name>(connection)
-                            .expect("Error while updating data")
                     }
                 )*
             }
 
             // insert function
             impl #struct_name {
-                pub fn insert(connection: &#connection_type, #params_for_insert: #param_types_for_insert) -> #struct_name {
+                pub fn insert(connection: &#connection_type, #params_for_insert: #param_types_for_insert) -> diesel::result::QueryResult<#struct_name> {
                     use diesel::prelude::*;
 
                     diesel::insert_into(crate::schema::#struct_module_name::table)
-                    .values(#params_for_insert)
-                    .get_result::<#struct_name>(connection)
-                    .unwrap()
+                        .values(#params_for_insert)
+                        .get_result::<#struct_name>(connection)
                     
                 }
             }
@@ -281,13 +307,12 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             // delete functions
             impl #struct_name {
                 #(
-                    pub fn #fn_names_delete(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> usize {
+                    pub fn #fn_names_delete(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> diesel::result::QueryResult<usize> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
                         let num_deleted = diesel::delete(#struct_module_name.filter(#params_names_for_delete_get2.eq(#params_for_delete_get2)))
-                            .execute(connection)
-                            .expect("Error while deleting data");
+                            .execute(connection);
 
                         num_deleted
                     }
