@@ -59,10 +59,15 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
         // types of the parameters.
         let mut param_types: Vec<Ident> = Vec::new();
 
-        // fields to get.
+        // fields to get from db.
         let mut get_fields: Vec<Ident> = Vec::new();
 
-        // TODO: Write details
+        /*
+            * `field2` is a variable through which we can get `field`.
+            * `i` is used to get the type of `field`. `i` is incremented in outer loop. That means `i` will be the same for `field`'s index.
+            * `j` is used to get the type of `field2`. `j` is incremented in inner loop. That means `j` will be the same for `field2`'s index.
+
+        */
 
         let mut i = 0;
 
@@ -71,7 +76,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
 
             for field2 in &fields_name {
                 if field != field2 {
-                    fn_names.push(format_ident!("get_{}_by_{}", field, field2));
+                    fn_names.push(format_ident!("get_{}s_by_{}", field, field2));
 
                     fn_return_types.push(fields_type[i].clone());
 
@@ -90,11 +95,57 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             i += 1;
         }
 
+        // let doc_title = format_ident!("Get {}s by {}", get_fields, params_name);
+
+        let mut doc_title: Vec<String> = Vec::new();
+        let mut doc_2: Vec<String> = Vec::new();
+        let mut doc_3: Vec<String> = Vec::new();
+
+        for i in 0..get_fields.len() {
+            doc_title.push(format!("Get {}s by {}", get_fields[i], params_name[i]));
+            doc_2.push(format!("This function will filter the field `{}` by the field `{}` and return `Vec<{}>`", get_fields[i], params_name[i], get_fields[i]));
+            doc_3.push(format!("The second argument is the `{}` by which you get the `Vec<{}>` of [`{}`]", params_name[i], get_fields[i], struct_name));
+            
+        }
+
         quote! {
             #input
 
+            /// Functions for getting data from database
+            /// 
+            /// # Example
+            /// 
+            /// If you have a struct like this:
+            /// 
+            /// ```rust
+            /// #[diesel_ease(PgConnection)]
+            /// #[derive(Queryable, Clone, Debug, PartialEq)]
+            /// struct User {
+            ///    id: i32,
+            ///    name: String,
+            /// }
+            /// ```
+            /// 
+            /// Then you will get functions for getting `name` by `id` and `id` by `name`.
+            /// 
+            /// ```rust
+            /// let connection = establish_connection();
+            ///
+            /// let name = User::get_names_by_id(&connection, 1);
+            /// 
+            /// let id = User::get_ids_by_name(&connection, name[0].clone());
+            /// 
+            /// assert_eq!(id[0], 1);
+            /// ```
+            /// 
             impl #struct_name {
-                #(
+                #(           
+                    #[doc = #doc_title]
+                    #[doc = ""]                     
+                    #[doc = #doc_2]
+                    #[doc = ""]                     
+                    #[doc = #doc_3]                        
+                    #[doc = ""]                                   
                     pub fn #fn_names(connection: &#connection_type, #params: #param_types) -> Vec<#fn_return_types> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
@@ -110,6 +161,8 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     }
                 )*
             }
+
+            
 
         }
         .into()
