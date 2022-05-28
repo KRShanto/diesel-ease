@@ -6,13 +6,6 @@ version = 3
 name = "diesel-ease"
 version = "0.1.0"
 dependencies = [
- "diesel-ease-macros",
-]
-
-[[package]]
-name = "diesel-ease-macros"
-version = "0.1.0"
-dependencies = [
  "quote",
  "syn",
 ]
