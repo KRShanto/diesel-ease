@@ -1,6 +1,6 @@
 # Diesel Ease
 
-A proc macro that will generate lots of functions for database operations.
+A proc macro that will generate some useful of functions for database operations that uses [diesel](https://crates.io/crates/diesel).
 
 This crate is for those who are using [diesel](https://crates.io/crates/diesel) for database operations and want to have less boilerplate code.
 
@@ -26,7 +26,7 @@ pub struct NewUser {
     pub name: String,
 }
 
-#[diesel_ease(PgConnection)]
+#[diesel_ease(PgConnection)] // here we used the macro
 #[derive(Queryable, Clone, Debug, PartialEq)]
 pub struct User {
     pub id: i32,
@@ -97,16 +97,22 @@ assert_eq!(&inserted_user.name, "Mostofa");
 
 ## Some important notes
 
-- Your schema must be the name of your model/struct. It must be in lowercase. and there must be `s` at the end.
+- Your schema must be the name of your model/struct. 
+
+  It must be in lowercase. and there must be `s` at the end.
+  
   For example if you have struct `User` in `src/models.rs`, so you must have `users` in your `src/schema.rs` file.
 
 - Your model must be in `crate::models` and your schema must be in `crate::schema`.
-    For example your struct could be `crate::models::User`, so your schema must be `crate::schema::users`
+  
+  For example your struct could be `crate::models::User`, so your schema must be `crate::schema::users`
 
-- There must be a struct `New{Model}`for the model for inserting values. For example if you have struct `User` in `src/models.rs`,
+- There must be a struct `New{Model}`for the model for inserting values.
+
+  For example if you have struct `User` in `src/models.rs`,
   then you must have struct `NewUser` in `src/models.rs`.
 
-- You need to pass the database connection struct to the macro. It can be one of these 
+- You need to pass the database connection struct to the macro. It can be one of these
   - `diesel::mysql::MysqlConnection`
   - `diesel::pg::PgConnection`
   - `diesel::sqlite::SqliteConnection`

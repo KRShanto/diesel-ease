@@ -1,7 +1,16 @@
 [package]
+author = "KR Shanto"
 name = "diesel-ease"
 version = "0.1.0"
 edition = "2021"
+description = "A proc macro that will generate some useful of functions for database operations that use diesel"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Shanto2005/diesel-ease/"
+homepage = "https://github.com/Shanto2005/diesel-ease/"
+readme = "README.md"
+documentation = "https://docs.rs/diesel-ease"
+keywords = ["database", "diesel"]
+categories = ["database"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

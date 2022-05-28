@@ -1,7 +1,12 @@
+#![doc = include_str!("../README.md")]
+
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::*; 
 
+/// A macro to generate useful associated functions for database operations for the given struct.
+/// 
+/// See the [module](index.html) for more information.
 #[proc_macro_attribute]
 pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
@@ -14,9 +19,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let struct_module_name = Ident::new(&struct_module_name, struct_name.span());
 
-    let args = parse_macro_input!(args as Ident);
-
-    let connection_type = &args;
+    let connection_type = parse_macro_input!(args as Ident);
 
     let fields = &input.fields;
 
@@ -43,6 +46,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
         // name of functions for get functions
         let mut fn_names_get: Vec<Ident> = Vec::new();
 
+        // name of functions for get2 functions
         let mut fn_names_get2: Vec<Ident> = Vec::new();
         
         // name of functions for update functions
@@ -160,23 +164,49 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
 
         let mut doc_title_delete = Vec::new();
         let mut doc_2_delete = Vec::new();
-        // let mut doc_3_delete = Vec::new();
 
         for i in 0..fields.len() {
-            doc_title_get.push(format!("Get {}s by filtering `{}`", fields[i], param_names_for_get[i]));
-            doc_2_get.push(format!("- The second argument is the `{}` by which you get the `Vec<{}>` of [`{}`]", param_names_for_get[i], fields[i], struct_name));
-            
-            
-            doc_title_get2.push(format!("Get [`{}`] by filtering `{}`", struct_name, fields[i]));
-            doc_2_get2.push(format!("- The second argument is the `{}` by which you get the `Vec<{}>`", fields[i], struct_name));
-            
-            doc_title_update.push(format!("Update {}s by `{}`", fields[i], param_names_for_get[i]));
-            doc_2_update.push(format!("- The second argument is the `{}` by which you update [`{}`]", param_names_for_get[i], struct_name));
+            doc_title_get.push(format!(
+                "Get {}s by filtering `{}`",
+                fields[i], param_names_for_get[i]
+            ));
+
+            doc_2_get.push(format!(
+                "- The second argument is the `{}` by which you get the `Vec<{}>` of [`{}`]",
+                param_names_for_get[i], fields[i], struct_name
+            ));
+
+            doc_title_get2.push(format!(
+                "Get [`{}`] by filtering `{}`",
+                struct_name, fields[i]
+            ));
+
+            doc_2_get2.push(format!(
+                "- The second argument is the `{}` by which you get the `Vec<{}>`",
+                fields[i], struct_name
+            ));
+
+            doc_title_update.push(format!(
+                "Update {}s by `{}`",
+                fields[i], param_names_for_get[i]
+            ));
+
+            doc_2_update.push(format!(
+                "- The second argument is the `{}` by which you update [`{}`]",
+                param_names_for_get[i], struct_name
+            ));
+
             doc_3_update.push(format!("- The third argument is the new `{}`", fields[i]));
 
-            doc_title_delete.push(format!("Delete [`{}`] by filtering `{}`", struct_name, fields[i]));
-            doc_2_delete.push(format!("- The second argument is the `{}` by which you delete [`{}`]", fields[i], struct_name));
+            doc_title_delete.push(format!(
+                "Delete [`{}`] by filtering `{}`",
+                struct_name, fields[i]
+            ));
 
+            doc_2_delete.push(format!(
+                "- The second argument is the `{}` by which you delete [`{}`]",
+                fields[i], struct_name
+            ));
 
         }
         
