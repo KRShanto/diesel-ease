@@ -100,6 +100,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
         let mut param_types_for_delete_get2 = Vec::new();
         
         // fields to get from db.
+        // NOTE: The variable `fields_name` and this is the same. `fields_name` will only contain struct fields one time. But this variable can contain same fields multiple times.
         let mut fields = Vec::new();
 
         // parameter for update functions
@@ -172,27 +173,40 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
 
         let mut doc_title_get = Vec::new();
         let mut doc_2_get = Vec::new();
-        let mut doc_3_get = Vec::new();
 
         let mut doc_title_get2 = Vec::new();
         let mut doc_2_get2 = Vec::new();
-        let mut doc_3_get2 = Vec::new();
 
+        let mut doc_title_update = Vec::new();
+        let mut doc_2_update = Vec::new();
+        let mut doc_3_update = Vec::new();
 
+        let doc_title_insert = format!("Insert a new [`{}`]", struct_name);
+        let doc_2_insert = format!("- The second parameter is the new value for inserting.");
+        let doc_3_insert = format!("*NOTE:* The second argument must be a [`New{}`]. It should live where the struct [`{}`] lives.", struct_name, struct_name);
+
+        let mut doc_title_delete = Vec::new();
+        let mut doc_2_delete = Vec::new();
+        // let mut doc_3_delete = Vec::new();
 
         for i in 0..fields.len() {
-            doc_title_get.push(format!("Get {}s by {}", fields[i], param_names_for_get[i]));
-            doc_2_get.push(format!("This function will filter the field `{}` by the field `{}` and return `Vec<{}>`", fields[i], param_names_for_get[i], fields[i]));
-            doc_3_get.push(format!("The second argument is the `{}` by which you get the `Vec<{}>` of [`{}`]", param_names_for_get[i], fields[i], struct_name));
+            doc_title_get.push(format!("Get {}s by filtering `{}`", fields[i], param_names_for_get[i]));
+            doc_2_get.push(format!("- The second argument is the `{}` by which you get the `Vec<{}>` of [`{}`]", param_names_for_get[i], fields[i], struct_name));
             
-        }
-
-        for i in 0..fields.len() {
+            
             doc_title_get2.push(format!("Get [`{}`] by filtering `{}`", struct_name, fields[i]));
-            doc_2_get2.push(format!("This function will filter the field `{}` and return `Vec<{}>`", fields[i], struct_name));
-            doc_3_get2.push(format!("The second argument is the `{}` by which you get the `Vec<{}>`", fields[i], struct_name));
+            doc_2_get2.push(format!("- The second argument is the `{}` by which you get the `Vec<{}>`", fields[i], struct_name));
+            
+            doc_title_update.push(format!("Update {}s by `{}`", fields[i], param_names_for_get[i]));
+            doc_2_update.push(format!("- The second argument is the `{}` by which you update [`{}`]", param_names_for_get[i], struct_name));
+            doc_3_update.push(format!("- The third argument is the new `{}`", fields[i]));
+
+            doc_title_delete.push(format!("Delete [`{}`] by filtering `{}`", struct_name, fields[i]));
+            doc_2_delete.push(format!("- The second argument is the `{}` by which you delete [`{}`]", fields[i], struct_name));
+
 
         }
+        
 
         quote! {
             #input
@@ -218,25 +232,25 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             /// let connection = establish_connection();
             ///
             /// // get the name of the User
-            /// let name = User::get_names_by_id(&connection, 1);
+            /// let name = User::get_names_by_id(&connection, 1).unwrap();
             /// 
             /// // get the id of the User
-            /// let id = User::get_ids_by_name(&connection, name[0].clone());
+            /// let id = User::get_ids_by_name(&connection, name[0].clone()).unwrap();
             /// 
             /// assert_eq!(id[0], 1);
             /// 
             /// // You can also get the User by id or name
-            /// let user = User::get_by_id(&connection, 1);
+            /// let user = User::get_by_id(&connection, 1).unwrap();
             /// ```
             /// 
             impl #struct_name {
                 #(           
                     #[doc = #doc_title_get]
                     #[doc = ""]                     
+                    #[doc = "# Arguments"]
+                    #[doc = ""]
                     #[doc = #doc_2_get]
                     #[doc = ""]                     
-                    #[doc = #doc_3_get]                        
-                    #[doc = ""] 
                     // get functions                           
                     pub fn #fn_names_get(connection: &#connection_type, #params_for_get: #param_types_for_get) -> diesel::result::QueryResult<Vec<#fn_return_types>> {
                         use crate::schema::#struct_module_name::dsl::*;
@@ -260,9 +274,9 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
 
                     #[doc = #doc_title_get2]
                     #[doc = ""]
-                    #[doc = #doc_2_get2]
+                    #[doc = "# Arguments"]
                     #[doc = ""]
-                    #[doc = #doc_3_get2]
+                    #[doc = #doc_2_get2]
                     #[doc = ""]
                     // get2 functions                
                     pub fn #fn_names_get2(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> diesel::result::QueryResult<Vec<#struct_name>> {
@@ -278,9 +292,56 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                 )*
             }
 
+            /// Functions for updating data from database
+            /// 
+            /// # Example
+            /// 
+            /// If you have a struct like this:
+            /// 
+            /// ```rust
+            /// #[diesel_ease(PgConnection)]
+            /// #[derive(Queryable, Clone, Debug, PartialEq)]
+            /// struct User {
+            ///    id: i32,
+            ///    name: String,
+            /// }
+            /// ```
+            /// 
+            /// Then you will get functions for updating `name` by `id` and `id` by `name`.
+            /// 
+            /// ```rust
+            /// use crate::schema::users::dsl::*;
+            /// use diesel::prelude::*;
+            /// 
+            /// let connection = establish_connection();
+            /// 
+            /// // get the old user
+            /// let old_user = User::get_by_name(&connection, String::from("John")).unwrap();
+            /// 
+            /// // update the user
+            /// let new_updated_user =
+            ///     User::update_names_by_id(&connection, old_user[0].id, "Johny Depth".to_string())
+            ///         .unwrap();
+            /// 
+            /// println!("OLD user: {:?}", old_user[0]);
+            /// println!("NEW user: {:?}", new_updated_user);
+            /// 
+            /// assert_ne!(old_user[0].name, new_updated_user.name);
+            /// ```
             // Update functions
             impl #struct_name {
                 #(
+                    #[doc = #doc_title_update]
+                    #[doc = ""]
+                    #[doc = "# Arguments"]
+                    #[doc = ""]
+                    #[doc = #doc_2_update]
+                    #[doc = ""]
+                    #[doc = #doc_2_update]
+                    #[doc = ""]
+                    #[doc = #doc_3_update]
+                    #[doc = ""]
+                    // update functions
                     pub fn #fn_names_update(connection: &#connection_type, #params_for_get: #param_types_for_get, #new_fields_params: #new_fields_types) -> diesel::result::QueryResult<#struct_name> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
@@ -292,8 +353,50 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                 )*
             }
 
-            // insert function
+            /// Functions for inserting data into database
+            /// 
+            /// # Example
+            /// 
+            /// If you have structs like this:
+            /// 
+            /// ```rust
+            /// #[diesel_ease(PgConnection)]
+            /// #[derive(Queryable, Clone, Debug, PartialEq)]
+            /// struct User {
+            ///   id: i32,
+            ///   name: String,
+            /// }
+            /// 
+            /// #[derive(Insertable)]
+            /// #[table_name = "users"]
+            /// struct NewUser {
+            ///   name: String,
+            /// }
+            ///  
+            /// ```            
+            /// Then you use the `insert` method to insert a new user.
+            /// 
+            /// ```rust
+            /// let connection = establish_connection();
+            /// 
+            /// let new_user = NewUser {
+            ///     name: "Sean".into(),
+            /// };
+            /// 
+            /// let inserted_user = User::insert(&connection, new_user).unwrap();
+            /// 
+            /// println!("New User: {:?}", inserted_user);            
+            /// ```
             impl #struct_name {
+
+                #[doc = #doc_title_insert]
+                #[doc = ""]
+                #[doc = "# Arguments"]
+                #[doc = ""]
+                #[doc = #doc_2_insert]
+                #[doc = ""]
+                #[doc = #doc_3_insert]
+                // insert function
                 pub fn insert(connection: &#connection_type, #params_for_insert: #param_types_for_insert) -> diesel::result::QueryResult<#struct_name> {
                     use diesel::prelude::*;
 
@@ -304,9 +407,46 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
 
-            // delete functions
+            /// Functions for deleting data from database
+            /// 
+            /// # Example
+            /// 
+            /// If you have structs like this:
+            /// 
+            /// ```rust
+            /// #[diesel_ease(PgConnection)]
+            /// #[derive(Queryable, Clone, Debug, PartialEq)]
+            /// struct User {
+            ///  id: i32,
+            ///  name: String,
+            /// }
+            /// ```
+            /// 
+            /// Then you can delete `User` by `id` or `name`.
+            /// 
+            /// ```rust
+            /// let connection = establish_connection();
+            /// 
+            /// // delete by id
+            /// let deleted_user = User::delete_by_id(&connection, 6).unwrap();
+            /// 
+            /// println!("Deleted {} users by id", deleted_user);
+            /// 
+            /// // delete by name
+            /// let deleted_user = User::delete_by_name(&connection, "Python Lover".into()).unwrap();
+            /// 
+            /// println!("Deleted {} users by name", deleted_user);
+            /// ```
+            ///         
             impl #struct_name {
                 #(
+                    #[doc = #doc_title_delete]
+                    #[doc = ""]
+                    #[doc = "# Arguments"]
+                    #[doc = ""]
+                    #[doc = #doc_2_delete]
+                    #[doc = ""]
+                    // delete functions
                     pub fn #fn_names_delete(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> diesel::result::QueryResult<usize> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
