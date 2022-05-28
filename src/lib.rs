@@ -1,33 +1,6 @@
-/* Some conventions for this macro:
-
-    * Your  schema must be the name of your model/struct. It must be in lowercase. and there must be `s` at the end.
-       For example:
-          Your struct:
-            User
-          Your schema:
-            users
-
-    * Your model must be in crate::models; and your schema must be in crate::schema;
-       For example:
-          Your struct:
-            crate::models::User
-          Your schema:
-            crate::schema::users
-
-    * There must be a struct `New{Model}`for the model for inserting values
-         For example:
-             Your struct:
-                User, Post
-             This struct must be availabe:
-                NewUser, NewPost
-*/
-
-
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::*; // TODO: Later import only the necessary parts.
-
-// TODO: Return Result instead of Vec<Post> directly.
+use syn::*; 
 
 #[proc_macro_attribute]
 pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
