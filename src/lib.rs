@@ -458,9 +458,25 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     }
                 )*
             }
-
-
             
+            impl #struct_name {
+
+                /// Get all data from database
+                pub fn get_all(connection: &#connection_type) -> diesel::result::QueryResult<Vec<#struct_name>> {
+                    use diesel::prelude::*;
+
+                    crate::schema::#struct_module_name::table.load::<#struct_name>(connection)
+                }
+
+                /// Delete all data from database
+                pub fn delete_all(connection: &#connection_type) -> diesel::result::QueryResult<usize> {
+                    use diesel::prelude::*;
+
+                    diesel::delete(crate::schema::#struct_module_name::table).execute(connection)
+                }
+            }
+            
+        
 
         }
         .into()
