@@ -1,8 +1,8 @@
 # Diesel Ease
 
-A proc macro that will generate some useful of functions for database operations that uses [diesel](https://crates.io/crates/diesel).
+A proc macro that generates useful functions for database operations that uses [diesel](https://crates.io/crates/diesel).
 
-This crate is for those who are using [diesel](https://crates.io/crates/diesel) for database operations and want to have less boilerplate code.
+This crate is for those who are using [diesel.rs](https://crates.io/crates/diesel) for database operations and want to have less boilerplate code.
 
 This crate will generate functions based on your struct and fields of that struct.
 
