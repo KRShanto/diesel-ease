@@ -6,21 +6,9 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "tester/Cargo.lock": true,
-        "tester/target": true,
-        "target": true,
-        "diesel-ease-macros/target": true,
-        "diesel-ease-macros/Cargo.lock": true,
-        "Cargo.lock": true,
         ".vscode": true
     },
     "hide-files.files": [
-        "tester/Cargo.lock",
-        "tester/target",
-        "target",
-        "diesel-ease-macros/target",
-        "diesel-ease-macros/Cargo.lock",
-        "Cargo.lock",
         ".vscode"
     ]
 }

@@ -232,18 +232,20 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             /// Then you will get functions for getting `name` by `id` and `id` by `name`.
             /// 
             /// ```rust
+            /// const USER_ID: i32 = 19;
+            /// 
             /// let connection = establish_connection();
-            ///
+            /// 
             /// // get the name of the User
-            /// let name = User::get_names_by_id(&connection, 1).unwrap();
+            /// let name = User::get_names_by_id(&connection, &USER_ID).unwrap();
             /// 
             /// // get the id of the User
-            /// let id = User::get_ids_by_name(&connection, name[0].clone()).unwrap();
+            /// let id = User::get_ids_by_name(&connection, &name[0]).unwrap();
             /// 
-            /// assert_eq!(id[0], 1);
+            /// assert_eq!(id[0], USER_ID);
             /// 
             /// // You can also get the User by id or name
-            /// let user = User::get_by_id(&connection, 1).unwrap();
+            /// let user: Vec<User> = User::get_by_id(&connection, &USER_ID).unwrap();
             /// ```
             /// 
             impl #struct_name {
@@ -255,7 +257,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_2_get]
                     #[doc = ""]                     
                     // get functions                           
-                    pub fn #fn_names_get(connection: &#connection_type, #params_for_get: #param_types_for_get) -> diesel::result::QueryResult<Vec<#fn_return_types>> {
+                    pub fn #fn_names_get(connection: &#connection_type, #params_for_get: &#param_types_for_get) -> diesel::result::QueryResult<Vec<#fn_return_types>> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
@@ -282,7 +284,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_2_get2]
                     #[doc = ""]
                     // get2 functions                
-                    pub fn #fn_names_get2(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> diesel::result::QueryResult<Vec<#struct_name>> {
+                    pub fn #fn_names_get2(connection: &#connection_type, #params_for_delete_get2: &#param_types_for_delete_get2) -> diesel::result::QueryResult<Vec<#struct_name>> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
@@ -313,17 +315,14 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             /// Then you will get functions for updating `name` by `id` and `id` by `name`.
             /// 
             /// ```rust
-            /// use crate::schema::users::dsl::*;
-            /// use diesel::prelude::*;
-            /// 
             /// let connection = establish_connection();
             /// 
             /// // get the old user
-            /// let old_user = User::get_by_name(&connection, String::from("John")).unwrap();
+            /// let old_user: Vec<User> = User::get_by_name(&connection, &"John".into()).unwrap();
             /// 
             /// // update the user
-            /// let new_updated_user =
-            ///     User::update_names_by_id(&connection, old_user[0].id, "Johny Depth".to_string())
+            /// let new_updated_user: User =
+            ///     User::update_names_by_id(&connection, &(old_user[0].id), &String::from("Johny Depth"))
             ///         .unwrap();
             /// 
             /// println!("OLD user: {:?}", old_user[0]);
@@ -345,7 +344,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_3_update]
                     #[doc = ""]
                     // update functions
-                    pub fn #fn_names_update(connection: &#connection_type, #params_for_get: #param_types_for_get, #new_fields_params: #new_fields_types) -> diesel::result::QueryResult<#struct_name> {
+                    pub fn #fn_names_update(connection: &#connection_type, #params_for_get: &#param_types_for_get, #new_fields_params: &#new_fields_types) -> diesel::result::QueryResult<#struct_name> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
@@ -431,12 +430,12 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             /// let connection = establish_connection();
             /// 
             /// // delete by id
-            /// let deleted_user = User::delete_by_id(&connection, 6).unwrap();
+            /// let deleted_user: usize = User::delete_by_id(&connection, &6).unwrap();
             /// 
             /// println!("Deleted {} users by id", deleted_user);
             /// 
             /// // delete by name
-            /// let deleted_user = User::delete_by_name(&connection, "Python Lover".into()).unwrap();
+            /// let deleted_user = User::delete_by_name(&connection, &String::from("Python Lover")).unwrap();
             /// 
             /// println!("Deleted {} users by name", deleted_user);
             /// ```
@@ -450,7 +449,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_2_delete]
                     #[doc = ""]
                     // delete functions
-                    pub fn #fn_names_delete(connection: &#connection_type, #params_for_delete_get2: #param_types_for_delete_get2) -> diesel::result::QueryResult<usize> {
+                    pub fn #fn_names_delete(connection: &#connection_type, #params_for_delete_get2: &#param_types_for_delete_get2) -> diesel::result::QueryResult<usize> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 

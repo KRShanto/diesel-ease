@@ -10,6 +10,8 @@ You can open your crate's docs to see the generated functions. Run `cargo doc --
 
 ## Installation
 
+In your Cargo.toml file, include the crate as so:
+
 ```toml
 [dependencies]
 diesel_ease = "0.1"
@@ -64,24 +66,27 @@ Now you will get these associated functions by using `diesel_ease` proc macro:
 You can use these methods like so:
 
 ```rust
+const USER_ID: i32 = 18;
+
 // connection to your database
 let connection = establish_connection();
 
 // get the names of the User whose id is 18
-let name: String = User::get_names_by_id(&connection, 18).unwrap()[0].clone();
+let name: String = User::get_names_by_id(&connection, &USER_ID).unwrap()[0].clone();
 
 // update the name of the user whose id is 18
-let updated_name: String = User::update_names_by_id(&connection, 18, format!("{}-2", name))
-    .unwrap()
-    .name;
+let updated_name: String =
+    User::update_names_by_id(&connection, &USER_ID, &format!("{}-2", name))
+        .unwrap()
+        .name;
 
 assert_ne!(name, updated_name);
 
 // delete the user whose id is 18
-User::delete_by_id(&connection, 18).unwrap();
+User::delete_by_id(&connection, &USER_ID).unwrap();
 
 // Now again get the names of the User whose id is 18
-let name: Vec<String> = User::get_names_by_id(&connection, 18).unwrap();
+let name: Vec<String> = User::get_names_by_id(&connection, &USER_ID).unwrap();
 
 assert_eq!(name.len(), 0);
 
