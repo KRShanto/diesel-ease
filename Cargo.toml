@@ -20,3 +20,9 @@ proc-macro = true
 [dependencies]
 syn = { version = "1.0.95", features = ["full", "extra-traits"] }
 quote = "1.0.18"
+
+[dev-dependencies]
+clap = {version="3.1.18", features=["derive"]}
+diesel = {version="1.4.8", features=["postgres"]}
+dotenv = "*"
+colored = "*"
