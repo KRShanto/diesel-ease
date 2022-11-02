@@ -104,12 +104,8 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
 
         */
 
-        let mut i = 0;
-
-        for field in &fields_name {
-            let mut j = 0;
-
-            for field2 in &fields_name {
+        for (i, field) in fields_name.iter().enumerate() {
+            for (j, field2) in fields_name.iter().enumerate() {
                 if field != field2 {
                     fn_names_get.push(format_ident!("get_{}s_by_{}", field, field2));
 
@@ -132,7 +128,6 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     new_fields_types.push(fields_type[i].clone());
                 }
 
-                j += 1;
             }
 
             fn_names_delete.push(format_ident!("delete_by_{}", field));
@@ -144,8 +139,6 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             params_for_delete_get2.push(format_ident!("query_{}", field));
             
             param_types_for_delete_get2.push(fields_type[i].clone());
-
-            i += 1;
         }
 
         let mut doc_title_get = Vec::new();
@@ -159,7 +152,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
         let mut doc_3_update = Vec::new();
 
         let doc_title_insert = format!("Insert a new [`{}`]", struct_name);
-        let doc_2_insert = format!("- The second parameter is the new value for inserting.");
+        let doc_2_insert = "- The second parameter is the new value for inserting.".to_string();
         let doc_3_insert = format!("*NOTE:* The second argument must be a [`New{}`]. It should live where the struct [`{}`] lives.", struct_name, struct_name);
 
         let mut doc_title_delete = Vec::new();
@@ -257,7 +250,8 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_2_get]
                     #[doc = ""]                     
                     // get functions                           
-                    pub fn #fn_names_get(connection: &#connection_type, #params_for_get: &#param_types_for_get) -> diesel::result::QueryResult<Vec<#fn_return_types>> {
+                    pub fn #fn_names_get(connection: &mut #connection_type, #params_for_get: &#param_types_for_get) ->
+                    diesel::result::QueryResult<Vec<#fn_return_types>> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
@@ -284,7 +278,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_2_get2]
                     #[doc = ""]
                     // get2 functions                
-                    pub fn #fn_names_get2(connection: &#connection_type, #params_for_delete_get2: &#param_types_for_delete_get2) -> diesel::result::QueryResult<Vec<#struct_name>> {
+                    pub fn #fn_names_get2(connection: &mut #connection_type, #params_for_delete_get2: &#param_types_for_delete_get2) -> diesel::result::QueryResult<Vec<#struct_name>> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
@@ -344,7 +338,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_3_update]
                     #[doc = ""]
                     // update functions
-                    pub fn #fn_names_update(connection: &#connection_type, #params_for_get: &#param_types_for_get, #new_fields_params: &#new_fields_types) -> diesel::result::QueryResult<#struct_name> {
+                    pub fn #fn_names_update(connection: &mut #connection_type, #params_for_get: &#param_types_for_get, #new_fields_params: &#new_fields_types) -> diesel::result::QueryResult<#struct_name> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
@@ -399,7 +393,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                 #[doc = ""]
                 #[doc = #doc_3_insert]
                 // insert function
-                pub fn insert(connection: &#connection_type, #params_for_insert: #param_types_for_insert) -> diesel::result::QueryResult<#struct_name> {
+                pub fn insert(connection: &mut #connection_type, #params_for_insert: #param_types_for_insert) -> diesel::result::QueryResult<#struct_name> {
                     use diesel::prelude::*;
 
                     diesel::insert_into(crate::schema::#struct_module_name::table)
@@ -449,7 +443,7 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
                     #[doc = #doc_2_delete]
                     #[doc = ""]
                     // delete functions
-                    pub fn #fn_names_delete(connection: &#connection_type, #params_for_delete_get2: &#param_types_for_delete_get2) -> diesel::result::QueryResult<usize> {
+                    pub fn #fn_names_delete(connection: &mut #connection_type, #params_for_delete_get2: &#param_types_for_delete_get2) -> diesel::result::QueryResult<usize> {
                         use crate::schema::#struct_module_name::dsl::*;
                         use diesel::prelude::*;
 
@@ -464,14 +458,14 @@ pub fn diesel_ease(args: TokenStream, input: TokenStream) -> TokenStream {
             impl #struct_name {
 
                 /// Get all data from database
-                pub fn get_all(connection: &#connection_type) -> diesel::result::QueryResult<Vec<#struct_name>> {
+                pub fn get_all(connection: &mut #connection_type) -> diesel::result::QueryResult<Vec<#struct_name>> {
                     use diesel::prelude::*;
 
                     crate::schema::#struct_module_name::table.load::<#struct_name>(connection)
                 }
 
                 /// Delete all data from database
-                pub fn delete_all(connection: &#connection_type) -> diesel::result::QueryResult<usize> {
+                pub fn delete_all(connection: &mut #connection_type) -> diesel::result::QueryResult<usize> {
                     use diesel::prelude::*;
 
                     diesel::delete(crate::schema::#struct_module_name::table).execute(connection)

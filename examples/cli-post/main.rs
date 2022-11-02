@@ -15,12 +15,12 @@ mod schema;
 
 fn main() {
     let cli = Cli::parse();
-    let connection = establish_connection();
+    let mut connection = establish_connection();
 
     match cli.subcommand {
         SubCommand::Create { title, body } => {
             Post::insert(
-                &connection,
+                &mut connection,
                 NewPost {
                     title: &title,
                     body: &body,
@@ -32,19 +32,19 @@ fn main() {
             println!("{}", "Post created successfully".blue().bold());
         }
         SubCommand::List => {
-            let posts = Post::get_all(&connection).unwrap();
+            let posts = Post::get_all(&mut connection).unwrap();
             println!("{:#?}", posts);
         }
         SubCommand::Get { id } => {
-            let post = Post::get_by_id(&connection, &id).unwrap();
+            let post = Post::get_by_id(&mut connection, &id).unwrap();
             println!("{:#?}", post);
         }
         SubCommand::GetByPublished { published } => {
-            let posts = Post::get_by_published(&connection, &published).unwrap();
+            let posts = Post::get_by_published(&mut connection, &published).unwrap();
             println!("{:#?}", posts);
         }
         SubCommand::GetByTitle { title } => {
-            let posts = Post::get_by_title(&connection, &title).unwrap();
+            let posts = Post::get_by_title(&mut connection, &title).unwrap();
             println!("{:#?}", posts);
         }
         SubCommand::Update {
@@ -54,38 +54,38 @@ fn main() {
             published,
         } => {
             if let Some(title) = title {
-                Post::update_titles_by_id(&connection, &id, &title).unwrap();
+                Post::update_titles_by_id(&mut connection, &id, &title).unwrap();
 
                 println!("{}", "Title updated successfully".blue().bold());
             }
             if let Some(body) = body {
-                Post::update_bodys_by_id(&connection, &id, &body).unwrap();
+                Post::update_bodys_by_id(&mut connection, &id, &body).unwrap();
 
                 println!("{}", "Body updated successfully".blue().bold());
             }
             if let Some(published) = published {
-                Post::update_publisheds_by_id(&connection, &id, &published).unwrap();
+                Post::update_publisheds_by_id(&mut connection, &id, &published).unwrap();
 
                 println!("{}", "Published updated successfully".blue().bold());
             }
         }
         SubCommand::Delete { id } => {
-            Post::delete_by_id(&connection, &id).unwrap();
+            Post::delete_by_id(&mut connection, &id).unwrap();
 
             println!("{}", "Post deleted successfully".blue().bold());
         }
         SubCommand::DeleteAll => {
-            Post::delete_all(&connection).unwrap();
+            Post::delete_all(&mut connection).unwrap();
 
             println!("{}", "All posts deleted successfully".blue().bold());
         }
         SubCommand::DeleteByPublished { published } => {
-            Post::delete_by_published(&connection, &published).unwrap();
+            Post::delete_by_published(&mut connection, &published).unwrap();
 
             println!("{}", "Posts deleted successfully".blue().bold());
         }
         SubCommand::DeleteByTitle { title } => {
-            Post::delete_by_title(&connection, &title).unwrap();
+            Post::delete_by_title(&mut connection, &title).unwrap();
 
             println!("{}", "Posts deleted successfully".blue().bold());
         }

@@ -2,7 +2,7 @@ use crate::diesel::pg::PgConnection;
 use crate::schema::*;
 
 #[diesel_ease::diesel_ease(PgConnection)]
-#[derive(Queryable, Debug, Clone, PartialEq)]
+#[derive(Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Post {
     pub id: i32,
     pub title: String,
@@ -10,7 +10,7 @@ pub struct Post {
     pub published: bool,
 }
 
-#[derive(Insertable, Debug, Clone, PartialEq)]
+#[derive(Insertable, Debug, Clone, PartialEq, Eq)]
 #[table_name = "posts"]
 pub struct NewPost<'a> {
     pub title: &'a str,
